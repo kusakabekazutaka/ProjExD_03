@@ -40,14 +40,20 @@ class Bird:
         引数1 num：こうかとん画像ファイル名の番号
         引数2 xy：こうかとん画像の位置座標タプル
         """
-        self.img = pg.transform.flip(  # 左右反転
-            pg.transform.rotozoom(  # 2倍に拡大
-                pg.image.load(f"ex03/fig/{num}.png"), 
-                0, 
-                2.0), 
-            True, 
-            False
-        )
+        img0= pg.transform.rotozoom(pg.image.load(f"ex03/fig/{num}.png"), 0, 2.0)
+        img=pg.transform.flip(img0,True,False)
+        self.imgs={
+            (+5,0):img,
+            (+5,-5):pg.transform.rotozoom(img,45,1.0),
+            (0,-5):pg.transform.rotozoom(img,90,1.0),
+            (-5,-5):pg.transform.rotozoom(img0,-45,1.0),
+            (-5,0):img0,
+            (-5,+5):pg.transform.rotozoom(img0,45,1.0),
+            (0,+5):pg.transform.rotozoom(img,-90,1.0),
+            (+5,+5):pg.transform.rotozoom(img,-45,1.0),
+        }
+        
+        self.img = self.imgs[(+5,0)]
         self.rct = self.img.get_rect()
         self.rct.center = xy
 
@@ -74,6 +80,8 @@ class Bird:
         self.rct.move_ip(sum_mv)
         if check_bound(self.rct) != (True, True):
             self.rct.move_ip(-sum_mv[0], -sum_mv[1])
+        if not (sum_mv[0] == 0 and sum_mv[1] == 0):
+            self.img =self.imgs[tuple(sum_mv)]
         screen.blit(self.img, self.rct)
 
 
@@ -112,9 +120,9 @@ class Beam:
         """
         ビームに関するクラス
         """
-        self.img = pg.transform.rotozoom(pg.image.load(f"ex03/fig/beam.png"))
+        self.img = pg.transform.rotozoom(pg.image.load(f"ex03/fig/beam.png"),0,2.0)
         self.rct = self.img.get_rect()
-        self.left = bird.rct.right
+        self.rct.left = bird.rct.right
         self.rct.centery = bird.rct.centery
         self.vx, self.vy = +5, 0
 
@@ -135,6 +143,7 @@ def main():
     beam = None
     clock = pg.time.Clock()
     tmr = 0
+    
     while True:
         for event in pg.event.get():
             if event.type == pg.QUIT:
@@ -142,20 +151,23 @@ def main():
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 beam = Beam(bird)#ビームクラスのインスタンスを生成する
         screen.blit(bg_img, [0, 0])
-        
-        if bird.rct.colliderect(bomb.rct):
-            # ゲームオーバー時に，こうかとん画像を切り替え，1秒間表示させる
-            bird.change_img(8, screen)
-            pg.display.update()
-            time.sleep(1)
-            return
+
+        if bomb is not None:
+            if bird.rct.colliderect(bomb.rct):
+                # ゲームオーバー時に，こうかとん画像を切り替え，1秒間表示させる
+                bird.change_img(8, screen)
+                pg.display.update()
+                time.sleep(1)
+                return
 
         if beam is not None and bomb is not None:
-            if bomb.rct.collidedict(beam.rct):
+            if bomb.rct.colliderect(beam.rct):
                 bomb=None
                 beam=None
+                # こうかとん画像を切り替え，1秒間表示させる
+                bird.change_img(6, screen)
+                pg.display.update()
         key_lst = pg.key.get_pressed()
-
         bird.update(key_lst, screen)
         if bomb is not None:
             bomb.update(screen)
