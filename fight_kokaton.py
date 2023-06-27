@@ -141,13 +141,15 @@ class Beam:
 
 class Explosion:
     def __init__(self,obj:Bomb, life:int):
-        self.ex_img=pg.image.load("ex03/fig/explosion.gif")
+        self.ex_img=pg.image.load("ex03/fig/explosion.gif")#爆発画像の読み込み
+        #反転させた画像のリスト
         s=[self.ex_img,pg.transform.flip(self.ex_img, True, False),pg.transform.flip(self.ex_img, False, False),pg.transform.flip(self.ex_img,False, True,)]
-        self.rct = self.ex_img.get_rect()
-        self.rct.center=obj.rct.center
-        self.life=life
+        self.rct = self.ex_img.get_rect()#画像を取得
+        self.rct.center=obj.rct.center#中心座標を爆弾と同じ場所に設定
+        self.life=life#selfを入力された引数に設定
     def update(self,screen:pg.Surface):
-        self.life-=1
+        self.life-=1#lifeを１減らす
+        #画像self.ex_img[self.life]を座標self.rct.centerに張り付け
         screen.blit(self.ex_img[self.life],self.rct.center)
 
 def main():
